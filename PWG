@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Monthly Password Generator</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: #f0f4f9; color: #1a2340; font-family: 'Segoe UI', system-ui, sans-serif; min-height: 100vh; padding: 2rem 1rem; }
+  header { text-align: center; margin-bottom: 2rem; }
+  h1 { font-size: 1.7rem; font-weight: 700; color: #1a3a6e; letter-spacing: -0.5px; }
+  .subtitle { font-size: 0.85rem; color: #5a6a88; margin-top: 0.3rem; }
+  .controls { background: #fff; border: 1px solid #d0daea; border-radius: 14px; padding: 1.3rem 1.5rem; max-width: 740px; margin: 0 auto 1.5rem; display: flex; flex-direction: column; gap: 1rem; box-shadow: 0 2px 8px rgba(26,58,110,0.06); }
+  .meta-row { display: grid; grid-template-columns: 1fr auto; gap: 0.75rem; align-items: center; }
+  .meta-input { font-size: 0.9rem; color: #1a2340; background: #f5f8fc; border: 1px solid #d0daea; border-radius: 8px; padding: 8px 12px; outline: none; font-family: inherit; transition: border-color 0.15s; width: 100%; }
+  .meta-input:focus { border-color: #1a6ac8; background: #fff; }
+  .meta-input::placeholder { color: #b0bdd0; }
+  .year-input { font-size: 0.9rem; color: #1a2340; background: #f5f8fc; border: 1px solid #d0daea; border-radius: 8px; padding: 8px 12px; outline: none; font-family: inherit; width: 90px; text-align: center; }
+  .year-input:focus { border-color: #1a6ac8; background: #fff; }
+  .divider { border: none; border-top: 1px solid #e8eef6; }
+  .ctrl-row { display: flex; align-items: center; gap: 10px; }
+  label.ctrl-lbl { font-size: 0.8rem; color: #5a6a88; white-space: nowrap; min-width: 58px; font-weight: 500; }
+  input[type=range] { flex: 1; accent-color: #1a6ac8; height: 4px; cursor: pointer; }
+  .len-val { font-size: 0.85rem; color: #1a6ac8; font-weight: 700; min-width: 24px; text-align: right; }
+  .toggle-row { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+  .toggle { display: flex; align-items: center; gap: 6px; background: #f0f4f9; border: 1px solid #c8d6e8; border-radius: 8px; padding: 5px 11px; cursor: pointer; font-size: 0.78rem; color: #5a6a88; transition: all 0.15s; user-select: none; font-weight: 500; }
+  .toggle.on { background: #e6f0fb; border-color: #1a6ac8; color: #1a3a6e; }
+  .toggle input { display: none; }
+  .btn-row { display: flex; gap: 0.75rem; }
+  .btn-primary { flex: 1; background: #1a6ac8; border: none; border-radius: 9px; color: #fff; font-size: 0.85rem; font-weight: 600; padding: 9px 16px; cursor: pointer; transition: all 0.15s; }
+  .btn-primary:hover { background: #1558a8; }
+  .btn-primary:active { transform: scale(0.98); }
+  .btn-secondary { flex: 1; background: #fff; border: 1px solid #1a6ac8; border-radius: 9px; color: #1a6ac8; font-size: 0.85rem; font-weight: 600; padding: 9px 16px; cursor: pointer; transition: all 0.15s; }
+  .btn-secondary:hover { background: #e6f0fb; }
+  .btn-secondary:active { transform: scale(0.98); }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 0.85rem; max-width: 740px; margin: 0 auto; }
+  .card { background: #fff; border: 1px solid #d0daea; border-radius: 12px; padding: 0.95rem 1.1rem; display: flex; flex-direction: column; gap: 8px; box-shadow: 0 1px 4px rgba(26,58,110,0.05); transition: border-color 0.15s, box-shadow 0.15s; }
+  .card:hover { border-color: #1a6ac8; box-shadow: 0 2px 10px rgba(26,106,200,0.1); }
+  .card-top { display: flex; justify-content: space-between; align-items: center; }
+  .month-label { font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1.2px; color: #1a6ac8; }
+  .card-actions { display: flex; gap: 6px; }
+  .btn-icon { background: #f0f4f9; border: 1px solid #c8d6e8; border-radius: 7px; color: #5a6a88; font-size: 13px; padding: 4px 9px; cursor: pointer; transition: all 0.12s; line-height: 1; font-weight: 500; }
+  .btn-icon:hover { background: #e6f0fb; color: #1a6ac8; border-color: #1a6ac8; }
+  .btn-icon.copied { color: #1a8a50; border-color: #b0dfc0; background: #eafaf2; }
+  .pw-display { font-family: 'Consolas','Courier New',monospace; font-size: 0.82rem; color: #1a2340; background: #f5f8fc; border: 1px solid #d0daea; border-radius: 7px; padding: 7px 10px; word-break: break-all; letter-spacing: 0.5px; min-height: 34px; }
+  .strength { display: flex; align-items: center; gap: 8px; }
+  .bars { display: flex; gap: 3px; }
+  .bar { width: 22px; height: 4px; border-radius: 2px; background: #d0daea; }
+  .bar.w{background:#d94040;}.bar.f{background:#e08830;}.bar.g{background:#1a8a50;}.bar.s{background:#1a6ac8;}
+  .str-label { font-size: 0.7rem; color: #8a9ab8; font-weight: 500; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Monthly Password Generator</h1>
+  <p class="subtitle">One unique password for each month of the year</p>
+</header>
+
+<div class="controls">
+  <div class="meta-row">
+    <input class="meta-input" id="pwLabel" type="text" placeholder="What are these passwords for? e.g. Bank of America" />
+    <input class="year-input" id="pwYear" type="number" placeholder="Year" min="2000" max="2100" />
+  </div>
+  <hr class="divider">
+  <div class="ctrl-row">
+    <label class="ctrl-lbl">Length</label>
+    <input type="range" id="lenSlider" min="8" max="32" value="16">
+    <span class="len-val" id="lenOut">16</span>
+  </div>
+  <div class="toggle-row">
+    <label class="toggle on" id="tUpper"><input type="checkbox" checked>A–Z uppercase</label>
+    <label class="toggle on" id="tLower"><input type="checkbox" checked>a–z lowercase</label>
+    <label class="toggle on" id="tNum"><input type="checkbox" checked>0–9 numbers</label>
+    <label class="toggle" id="tSym"><input type="checkbox">!@# symbols</label>
+  </div>
+  <div class="btn-row">
+    <button class="btn-primary" onclick="regenAll()">↻ Regenerate All</button>
+    <button class="btn-secondary" onclick="downloadPDF()">↓ Download PDF</button>
+  </div>
+</div>
+
+<div class="grid" id="grid"></div>
+
+<script>
+const MONTHS=['January','February','March','April','May','June','July','August','September','October','November','December'];
+const UPPER='ABCDEFGHIJKLMNOPQRSTUVWXYZ',LOWER='abcdefghijklmnopqrstuvwxyz',NUMS='0123456789',SYMS='!@#$%^&*()-_=+[]{}|;:,.<>?';
+let passwords=Array(12).fill('');
+
+function getCharset(){
+  let s='';
+  if(document.querySelector('#tUpper input').checked)s+=UPPER;
+  if(document.querySelector('#tLower input').checked)s+=LOWER;
+  if(document.querySelector('#tNum input').checked)s+=NUMS;
+  if(document.querySelector('#tSym input').checked)s+=SYMS;
+  return s||LOWER;
+}
+function genPw(){
+  const len=+document.getElementById('lenSlider').value,cs=getCharset();
+  const arr=new Uint32Array(len);crypto.getRandomValues(arr);
+  return Array.from(arr,v=>cs[v%cs.length]).join('');
+}
+function strength(pw){
+  let sc=0;
+  if(/[A-Z]/.test(pw))sc++;if(/[a-z]/.test(pw))sc++;if(/[0-9]/.test(pw))sc++;if(/[^A-Za-z0-9]/.test(pw))sc++;
+  if(pw.length>=16)sc++;if(pw.length>=24)sc++;
+  if(sc<=2)return{lvl:1,label:'Weak'};if(sc<=3)return{lvl:2,label:'Fair'};if(sc<=4)return{lvl:3,label:'Good'};
+  return{lvl:4,label:'Strong'};
+}
+function barClass(lvl,i){return i<lvl?['','w','f','g','s'][lvl]:'';}
+function regenAll(){passwords=passwords.map(()=>genPw());renderCards();}
+function regenOne(i){passwords[i]=genPw();renderCards();}
+function copyPw(i){
+  navigator.clipboard.writeText(passwords[i]).then(()=>{
+    const b=document.getElementById('copy-'+i);
+    b.textContent='✓';b.classList.add('copied');
+    setTimeout(()=>{b.textContent='⎘';b.classList.remove('copied');},1500);
+  });
+}
+
+// Pure JS PDF builder — no libraries
+function downloadPDF(){
+  const label=document.getElementById('pwLabel').value.trim()||'Monthly Passwords';
+  const year=document.getElementById('pwYear').value.trim();
+  const strLabels=['','Weak','Fair','Good','Strong'];
+
+  // PDF uses points: 1pt = 1/72 inch. A4 = 595 x 842 pt
+  const W=595,H=842,margin=40;
+  const lines=[];
+  const objs=[];
+  let oid=1;
+
+  function esc(s){return s.replace(/\\/g,'\\\\').replace(/\(/g,'\\(').replace(/\)/g,'\\)');}
+
+  // We'll collect page stream commands
+  const cmds=[];
+
+  // Header background (blue rect)
+  cmds.push('q');
+  cmds.push('0.102 0.416 0.784 rg'); // #1a6ac8
+  cmds.push(`0 ${H-70} ${W} 70 re f`);
+  cmds.push('Q');
+
+  // Header text
+  cmds.push('BT');
+  cmds.push('/F1 18 Tf');
+  cmds.push('1 1 1 rg');
+  const labelX=Math.max(margin, (W - label.length*9)/2);
+  cmds.push(`${labelX} ${H-38} Td`);
+  cmds.push(`(${esc(label)}) Tj`);
+  cmds.push('ET');
+
+  if(year){
+    cmds.push('BT');
+    cmds.push('/F2 11 Tf');
+    cmds.push('0.85 0.85 0.95 rg');
+    const yrX=(W-year.length*6.5)/2;
+    cmds.push(`${yrX} ${H-56} Td`);
+    cmds.push(`(Year: ${esc(year)}) Tj`);
+    cmds.push('ET');
+  }
+
+  // Cards: 2 columns
+  const cardW=(W-margin*2-16)/2;
+  const cardH=80;
+  const cardGap=12;
+  let startY=H-90;
+
+  MONTHS.forEach((m,i)=>{
+    const col=i%2;
+    const row=Math.floor(i/2);
+    const x=margin+col*(cardW+16);
+    const y=startY-row*(cardH+cardGap)-cardH;
+
+    // Card background
+    cmds.push('q');
+    cmds.push('0.957 0.972 0.988 rg'); // #f5f8fc
+    cmds.push('0.816 0.855 0.918 RG'); // #d0daea
+    cmds.push('0.5 w');
+    // Simple rect (no rounded corners in basic PDF)
+    cmds.push(`${x} ${y} ${cardW} ${cardH} re B`);
+    cmds.push('Q');
+
+    // Month label
+    cmds.push('BT');
+    cmds.push('/F1 8 Tf');
+    cmds.push('0.102 0.416 0.784 rg');
+    cmds.push(`${x+10} ${y+cardH-18} Td`);
+    cmds.push(`(${esc(m.toUpperCase())}) Tj`);
+    cmds.push('ET');
+
+    // Password
+    cmds.push('BT');
+    cmds.push('/F3 9 Tf');
+    cmds.push('0.102 0.137 0.251 rg');
+    cmds.push(`${x+10} ${y+cardH-36} Td`);
+    cmds.push(`(${esc(passwords[i])}) Tj`);
+    cmds.push('ET');
+
+    // Strength
+    const st=strength(passwords[i]);
+    const sc=[[0.851,0.251,0.251],[0.878,0.533,0.188],[0.102,0.541,0.314],[0.102,0.416,0.784]][st.lvl-1];
+    cmds.push('BT');
+    cmds.push('/F2 8 Tf');
+    cmds.push(`${sc[0]} ${sc[1]} ${sc[2]} rg`);
+    cmds.push(`${x+10} ${y+12} Td`);
+    cmds.push(`(Strength: ${strLabels[st.lvl]}) Tj`);
+    cmds.push('ET');
+  });
+
+  // Footer
+  cmds.push('q');
+  cmds.push('0.941 0.957 0.976 rg');
+  cmds.push(`0 0 ${W} 28 re f`);
+  cmds.push('Q');
+  cmds.push('BT');
+  cmds.push('/F2 8 Tf');
+  cmds.push('0.541 0.604 0.722 rg');
+  const footerTxt='Keep this document secure. Do not share passwords.';
+  cmds.push(`${(W-footerTxt.length*4.5)/2} 10 Td`);
+  cmds.push(`(${footerTxt}) Tj`);
+  cmds.push('ET');
+
+  const stream=cmds.join('\n');
+
+  // Build PDF structure
+  const pdf=[];
+  const offsets=[];
+
+  function addObj(content){
+    offsets.push(pdf.join('').length);
+    pdf.push(`${oid} 0 obj\n${content}\nendobj\n`);
+    return oid++;
+  }
+
+  // Obj 1: catalog (added last, placeholder)
+  const catalogId=oid++;offsets.push(0);pdf.push('');
+  // Obj 2: pages (placeholder)
+  const pagesId=oid++;offsets.push(0);pdf.push('');
+  // Obj 3: page
+  const pageId=oid++;offsets.push(0);pdf.push('');
+  // Obj 4: stream
+  const streamId=oid++;offsets.push(0);pdf.push('');
+  // Fonts
+  const f1Id=oid++;offsets.push(0);pdf.push('');
+  const f2Id=oid++;offsets.push(0);pdf.push('');
+  const f3Id=oid++;offsets.push(0);pdf.push('');
+
+  // Now write real content
+  let out='%PDF-1.4\n';
+
+  function writeObj(id,content){
+    offsets[id-1]=out.length;
+    out+=`${id} 0 obj\n${content}\nendobj\n`;
+  }
+
+  writeObj(1,`<< /Type /Catalog /Pages ${pagesId} 0 R >>`);
+  writeObj(2,`<< /Type /Pages /Kids [${pageId} 0 R] /Count 1 >>`);
+  writeObj(3,`<< /Type /Page /Parent ${pagesId} 0 R /MediaBox [0 0 ${W} ${H}] /Contents ${streamId} 0 R /Resources << /Font << /F1 ${f1Id} 0 R /F2 ${f2Id} 0 R /F3 ${f3Id} 0 R >> >> >>`);
+  writeObj(4,`<< /Length ${stream.length} >>\nstream\n${stream}\nendstream`);
+  writeObj(5,'<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding >>');
+  writeObj(6,'<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>');
+  writeObj(7,'<< /Type /Font /Subtype /Type1 /BaseFont /Courier /Encoding /WinAnsiEncoding >>');
+
+  const xrefPos=out.length;
+  out+=`xref\n0 ${oid}\n0000000000 65535 f \n`;
+  for(let k=1;k<oid;k++){
+    out+=offsets[k-1].toString().padStart(10,'0')+' 00000 n \n';
+  }
+  out+=`trailer\n<< /Size ${oid} /Root 1 0 R >>\nstartxref\n${xrefPos}\n%%EOF`;
+
+  const blob=new Blob([out],{type:'application/pdf'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  const filename=(label.replace(/\s+/g,'-').toLowerCase())+(year?'-'+year:'')+'.pdf';
+  a.href=url;a.download=filename;
+  document.body.appendChild(a);a.click();
+  document.body.removeChild(a);
+  setTimeout(()=>URL.revokeObjectURL(url),1000);
+}
+
+function renderCards(){
+  const grid=document.getElementById('grid');
+  grid.innerHTML='';
+  MONTHS.forEach((m,i)=>{
+    const pw=passwords[i],st=strength(pw);
+    const card=document.createElement('div');
+    card.className='card';
+    card.innerHTML=`
+      <div class="card-top">
+        <span class="month-label">${m}</span>
+        <div class="card-actions">
+          <button class="btn-icon" id="copy-${i}" onclick="copyPw(${i})" title="Copy">⎘</button>
+          <button class="btn-icon" onclick="regenOne(${i})" title="Regenerate">↻</button>
+        </div>
+      </div>
+      <div class="pw-display">${pw}</div>
+      <div class="strength">
+        <div class="bars">${[1,2,3,4].map(n=>`<div class="bar ${barClass(st.lvl,n-1)}"></div>`).join('')}</div>
+        <span class="str-label">${st.label}</span>
+      </div>`;
+    grid.appendChild(card);
+  });
+}
+
+document.querySelectorAll('.toggle').forEach(t=>{
+  t.addEventListener('click',()=>{
+    const cb=t.querySelector('input');
+    cb.checked=!cb.checked;t.classList.toggle('on',cb.checked);regenAll();
+  });
+});
+document.getElementById('lenSlider').addEventListener('input',function(){
+  document.getElementById('lenOut').textContent=this.value;regenAll();
+});
+
+regenAll();
+</script>
+</body>
+</html>
